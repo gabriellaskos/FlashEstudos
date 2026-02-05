@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards - Psicologia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .flashcard-container {
+            perspective: 1000px;
+            margin-bottom: 30px;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .card-front {
+            background: white;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #5a0000 0%, #8B0000 100%);
+            transform: rotateY(180deg);
+        }
+        
+        .card-back .card-label {
+            background: white;
+            color: #8B0000;
+        }
+        
+        .card-back .card-content {
+            color: white;
+        }
+
+        .card-label {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #8B0000;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .card-content {
+            text-align: center;
+            font-size: 1.4em;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-prev, .btn-next {
+            background: white;
+            color: #8B0000;
+        }
+
+        .btn-prev:hover, .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-flip {
+            background: #B22222;
+            color: white;
+        }
+
+        .btn-flip:hover {
+            background: #8B0000;
+            transform: translateY(-2px);
+        }
+
+        .progress {
+            text-align: center;
+            color: white;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .category-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            padding: 10px 20px;
+            border: 2px solid white;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .category-btn:hover {
+            background: white;
+            color: #8B0000;
+        }
+
+        .category-btn.active {
+            background: white;
+            color: #8B0000;
+        }
+
+        .hint {
+            text-align: center;
+            color: white;
+            margin-top: 15px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .flashcard {
+                height: 350px;
+            }
+            
+            .card-content {
+                font-size: 1.1em;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Flashcards de Psicologia</h1>
+            <p>Estude de forma eficiente e interativa</p>
+        </div>
+
+        <div class="category-selector" id="categorySelector">
+            <!-- Categories will be populated by JavaScript -->
+        </div>
+
+        <div class="progress" id="progress">
+            Card 1 de 10
+        </div>
+
+        <div class="flashcard-container">
+            <div class="flashcard" id="flashcard">
+                <div class="card-face card-front">
+                    <span class="card-label">PERGUNTA</span>
+                    <div class="card-content" id="question">
+                        Carregando...
+                    </div>
+                </div>
+                <div class="card-face card-back">
+                    <span class="card-label">RESPOSTA</span>
+                    <div class="card-content" id="answer">
+                        Resposta aqui
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-prev" onclick="previousCard()">◀ Anterior</button>
+            <button class="btn btn-flip" onclick="flipCard()">🔄 Virar Card</button>
+            <button class="btn btn-next" onclick="nextCard()">Próximo ▶</button>
+        </div>
+
+        <div class="hint">
+            💡 Clique no card ou aperte ESPAÇO para virar
+        </div>
+    </div>
+
+    <script>
+        // Base de dados de flashcards por categoria
+        const flashcardsData = {
+            psicanálise: [
+                {
+                    question: "Quais são as três instâncias da personalidade segundo Freud?",
+                    answer: "Id (princípio do prazer, inconsciente), Ego (princípio da realidade, mediador) e Superego (consciência moral, normas sociais internalizadas)."
+                },
+                {
+                    question: "O que são mecanismos de defesa?",
+                    answer: "Estratégias inconscientes do ego para lidar com ansiedade e conflitos. Exemplos: repressão, negação, projeção, racionalização, sublimação e regressão."
+                },
+                {
+                    question: "Quais são os 5 estágios do desenvolvimento psicossexual de Freud?",
+                    answer: "Oral (0-1 ano), Anal (1-3 anos), Fálico (3-6 anos), Latência (6-puberdade) e Genital (puberdade em diante). Cada fase tem zonas erógenas específicas."
+                },
+                {
+                    question: "O que é transferência na psicanálise?",
+                    answer: "Processo onde o paciente projeta sentimentos, desejos e expectativas de figuras importantes do passado (geralmente dos pais) no terapeuta."
+                },
+                {
+                    question: "O que é o Complexo de Édipo?",
+                    answer: "Fase fálica (3-6 anos) onde a criança desenvolve desejo inconsciente pelo genitor do sexo oposto e rivalidade com o do mesmo sexo. Fundamental para formação da identidade."
+                }
+            ],
+            cognitiva: [
+                {
+                    question: "O que são esquemas cognitivos?",
+                    answer: "Padrões de pensamento que organizam categorias de informação e as relações entre elas. Influenciam como interpretamos eventos e podem levar a distorções cognitivas."
+                },
+                {
+                    question: "Quais são as principais distorções cognitivas?",
+                    answer: "Pensamento dicotômico (tudo ou nada), catastrofização, personalização, generalização excessiva, filtragem mental, desqualificação do positivo e leitura mental."
+                },
+                {
+                    question: "O que é a Terapia Cognitivo-Comportamental (TCC)?",
+                    answer: "Abordagem que visa identificar e modificar pensamentos disfuncionais e comportamentos inadequados. Foca na relação entre pensamentos, emoções e comportamentos."
+                },
+                {
+                    question: "O que é reestruturação cognitiva?",
+                    answer: "Técnica da TCC que ensina a identificar pensamentos automáticos negativos, avaliar sua validade e substituí-los por pensamentos mais realistas e adaptativos."
+                },
+                {
+                    question: "Qual a diferença entre pensamento automático e crença central?",
+                    answer: "Pensamentos automáticos são rápidos e situacionais. Crenças centrais são convicções profundas sobre si, outros e mundo, mais estáveis e difíceis de mudar."
+                }
+            ],
+            comportamental: [
+                {
+                    question: "O que é condicionamento clássico?",
+                    answer: "Aprendizagem por associação descoberta por Pavlov. Estímulo neutro + estímulo incondicionado = resposta condicionada. Exemplo: sino (neutro) + comida = salivação ao som do sino."
+                },
+                {
+                    question: "O que é condicionamento operante?",
+                    answer: "Aprendizagem por consequências (Skinner). Comportamentos seguidos de reforço aumentam; seguidos de punição diminuem. Inclui reforço positivo, negativo e punições."
+                },
+                {
+                    question: "Diferença entre reforço positivo e negativo?",
+                    answer: "Reforço positivo: adiciona estímulo agradável (elogio aumenta comportamento). Reforço negativo: remove estímulo aversivo (aspirina remove dor, aumenta uso de aspirina)."
+                },
+                {
+                    question: "O que é extinção comportamental?",
+                    answer: "Diminuição gradual de uma resposta condicionada quando o reforço é removido. Exemplo: criança para de fazer birra se não receber mais atenção por isso."
+                },
+                {
+                    question: "O que é modelagem (shaping)?",
+                    answer: "Técnica de reforçar aproximações sucessivas do comportamento desejado. Útil para ensinar comportamentos complexos que não ocorrem naturalmente."
+                }
+            ],
+            humanista: [
+                {
+                    question: "Quais são os conceitos centrais de Carl Rogers?",
+                    answer: "Tendência atualizante (motivação inata para crescimento), autorrealização, congruência (self real vs ideal), aceitação positiva incondicional e empatia."
+                },
+                {
+                    question: "O que é a Hierarquia de Necessidades de Maslow?",
+                    answer: "Pirâmide de necessidades: base (fisiológicas, segurança), meio (pertencimento, estima), topo (autorrealização). Níveis inferiores devem ser satisfeitos primeiro."
+                },
+                {
+                    question: "O que é autorrealização segundo Maslow?",
+                    answer: "Topo da hierarquia. Realizar plenamente o potencial pessoal, buscar crescimento, criatividade e significado. Características: aceitação, espontaneidade, experiências de pico."
+                },
+                {
+                    question: "Quais as condições necessárias para mudança terapêutica segundo Rogers?",
+                    answer: "Congruência do terapeuta (autenticidade), consideração positiva incondicional (aceitação sem julgamento) e compreensão empática precisa."
+                },
+                {
+                    question: "O que são experiências de pico?",
+                    answer: "Momentos intensos de alegria, admiração e transcendência (conceito de Maslow). Comuns em pessoas autorrealizadas. Sensação de unidade, atemporalidade e perfeição."
+                }
+            ],
+            desenvolvimento: [
+                {
+                    question: "Quais são os estágios do desenvolvimento cognitivo de Piaget?",
+                    answer: "Sensório-motor (0-2 anos), Pré-operatório (2-7 anos), Operatório concreto (7-11 anos), Operatório formal (11+ anos). Cada um com características cognitivas específicas."
+                },
+                {
+                    question: "O que é a teoria do apego de Bowlby?",
+                    answer: "Vínculo emocional entre criança e cuidador é essencial para desenvolvimento. Tipos: seguro, ansioso-ambivalente, evitativo e desorganizado. Influencia relações futuras."
+                },
+                {
+                    question: "Quais são os estágios psicossociais de Erikson?",
+                    answer: "8 estágios com crises: confiança vs desconfiança, autonomia vs vergonha, iniciativa vs culpa, produtividade vs inferioridade, identidade vs confusão, intimidade vs isolamento, generatividade vs estagnação, integridade vs desespero."
+                },
+                {
+                    question: "O que é a Zona de Desenvolvimento Proximal (ZDP) de Vygotsky?",
+                    answer: "Distância entre o que a criança consegue fazer sozinha e o que consegue com ajuda. O aprendizado ocorre na ZDP através de mediação social."
+                },
+                {
+                    question: "O que caracteriza o pensamento pré-operatório?",
+                    answer: "Egocentrismo (dificuldade em ver perspectiva alheia), animismo, pensamento mágico, centração (foco em um aspecto), irreversibilidade e ausência de conservação."
+                }
+            ],
+            social: [
+                {
+                    question: "O que é dissonância cognitiva?",
+                    answer: "Desconforto psicológico ao ter cognições contraditórias. A pessoa tende a mudar atitudes ou comportamentos para reduzir a dissonância e restaurar consistência."
+                },
+                {
+                    question: "O que é conformidade social?",
+                    answer: "Mudança de comportamento ou atitude para se adequar às normas do grupo. Experimentos de Asch mostraram que pessoas concordam com maioria mesmo sabendo estar errada."
+                },
+                {
+                    question: "O que é obediência à autoridade?",
+                    answer: "Tendência de obedecer ordens de figuras de autoridade. Experimento de Milgram mostrou que pessoas aplicam choques em outros se ordenadas por autoridade."
+                },
+                {
+                    question: "O que é efeito espectador (bystander effect)?",
+                    answer: "Quanto mais pessoas presenciam emergência, menos provável que alguém ajude. Difusão de responsabilidade: cada um pensa que outro vai ajudar."
+                },
+                {
+                    question: "O que são atribuições internas vs externas?",
+                    answer: "Atribuição interna: explica comportamento por características da pessoa. Atribuição externa: explica por fatores situacionais. Erro fundamental: supervalorizar fatores internos em outros."
+                }
+            ],
+            psicopatologia: [
+                {
+                    question: "Quais são os critérios diagnósticos para Depressão Maior?",
+                    answer: "Pelo menos 5 sintomas por 2+ semanas, incluindo humor deprimido ou anedonia. Outros: alteração peso/sono/psicomotora, fadiga, culpa, dificuldade concentração, ideação suicida."
+                },
+                {
+                    question: "Diferença entre Transtorno Bipolar I e II?",
+                    answer: "Bipolar I: episódios maníacos completos (7+ dias, prejuízo grave). Bipolar II: episódios hipomaníacos (4+ dias, sem prejuízo grave) e depressivos. Ambos têm ciclagem de humor."
+                },
+                {
+                    question: "O que caracteriza o Transtorno de Ansiedade Generalizada (TAG)?",
+                    answer: "Ansiedade e preocupação excessivas sobre diversos eventos/atividades, por 6+ meses, difícil de controlar. Sintomas: inquietação, fadiga, irritabilidade, tensão muscular, perturbação do sono."
+                },
+                {
+                    question: "Quais são os critérios para Transtorno de Pânico?",
+                    answer: "Ataques de pânico recorrentes e inesperados. Preocupação persistente com novos ataques ou mudança comportamental. Ataque: palpitação, sudorese, tremor, falta de ar, medo de morrer/enlouquecer."
+                },
+                {
+                    question: "O que diferencia TOC de TEPT?",
+                    answer: "TOC: obsessões (pensamentos intrusivos) e compulsões (rituais) não relacionadas a trauma. TEPT: sintomas (revivência, evitação, hipervigilância) após evento traumático específico."
+                }
+            ]
+        };
+
+        let currentCategory = 'psicanálise';
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        // Inicializar categorias
+        function initCategories() {
+            const selector = document.getElementById('categorySelector');
+            const categories = {
+                'psicanálise': 'Psicanálise',
+                'cognitiva': 'Cognitiva',
+                'comportamental': 'Comportamental',
+                'humanista': 'Humanista',
+                'desenvolvimento': 'Desenvolvimento',
+                'social': 'Social',
+                'psicopatologia': 'Psicopatologia'
+            };
+
+            for (let key in categories) {
+                const btn = document.createElement('button');
+                btn.className = 'category-btn' + (key === currentCategory ? ' active' : '');
+                btn.textContent = categories[key];
+                btn.onclick = () => changeCategory(key);
+                selector.appendChild(btn);
+            }
+        }
+
+        // Mudar categoria
+        function changeCategory(category) {
+            currentCategory = category;
+            currentCardIndex = 0;
+            isFlipped = false;
+            
+            // Atualizar botões ativos
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updateCard();
+        }
+
+        // Atualizar card
+        function updateCard() {
+            const cards = flashcardsData[currentCategory];
+            const card = cards[currentCardIndex];
+            
+            document.getElementById('question').textContent = card.question;
+            document.getElementById('answer').textContent = card.answer;
+            document.getElementById('progress').textContent = `Card ${currentCardIndex + 1} de ${cards.length}`;
+            
+            // Resetar flip - SEMPRE volta para a pergunta
+            const flashcard = document.getElementById('flashcard');
+            if (isFlipped) {
+                flashcard.classList.remove('flipped');
+                isFlipped = false;
+            }
+        }
+
+        // Virar card
+        function flipCard() {
+            const flashcard = document.getElementById('flashcard');
+            flashcard.classList.toggle('flipped');
+            isFlipped = !isFlipped;
+        }
+
+        // Próximo card
+        function nextCard() {
+            const cards = flashcardsData[currentCategory];
+            if (currentCardIndex < cards.length - 1) {
+                currentCardIndex++;
+                updateCard();
+            }
+        }
+
+        // Card anterior
+        function previousCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                updateCard();
+            }
+        }
+
+        // Event listeners
+        document.getElementById('flashcard').addEventListener('click', flipCard);
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                flipCard();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                previousCard();
+            }
+        });
+
+        // Inicializar
+        initCategories();
+        updateCard();
+    </script>
+</body>
+</html>
